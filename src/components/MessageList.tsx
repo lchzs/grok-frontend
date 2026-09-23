@@ -9,9 +9,8 @@ interface MessageListProps {
 }
 
 function renderInline(text: string) {
-  // Lightweight markdown: code, bold, italic, inline code, blockquotes
   const parts: ReactNode[] = []
-  const re = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|^> .+$)/gm
+  const re = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
   let last = 0
   let m: RegExpExecArray | null
   const src = text
@@ -28,12 +27,6 @@ function renderInline(text: string) {
       parts.push(<strong key={m.index}>{token.slice(2, -2)}</strong>)
     } else if (token.startsWith('*')) {
       parts.push(<em key={m.index}>{token.slice(1, -1)}</em>)
-    } else if (token.startsWith('> ')) {
-      parts.push(
-        <blockquote key={m.index} className="quote">
-          {token.slice(2)}
-        </blockquote>,
-      )
     }
     last = m.index + token.length
   }
@@ -57,9 +50,17 @@ function renderContent(content: string) {
     }
     return (
       <div key={i} className="md-block">
-        {block.split('\n').map((line, j) => (
-          <p key={j}>{line ? renderInline(line) : <br />}</p>
-        ))}
+        {block.split('\n').map((line, j) => {
+          if (!line) return <br key={j} />
+          if (line.startsWith('> ')) {
+            return (
+              <blockquote key={j} className="quote">
+                {renderInline(line.slice(2))}
+              </blockquote>
+            )
+          }
+          return <p key={j}>{renderInline(line)}</p>
+        })}
       </div>
     )
   })
